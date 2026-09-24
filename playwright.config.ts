@@ -10,14 +10,17 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:3100",
     channel: "chrome",
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: true,
+    command: "npm run dev -- -p 3100",
+    url: "http://localhost:3100",
+    reuseExistingServer: false,
     timeout: 180_000,
+    // e2e butuh rate limit aktif (ada test lockout) — paksa nyala terpisah
+    // dari server dev harian yang RATE_LIMIT_DISABLED=true.
+    env: { RATE_LIMIT_DISABLED: "false" },
   },
 });

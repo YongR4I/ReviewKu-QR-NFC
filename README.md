@@ -38,6 +38,7 @@ npm run dev                  # http://localhost:3000
 | `EDIT_TOKEN_SECRET` | HMAC cookie edit (random 32 byte hex) |
 | `NEXT_PUBLIC_SITE_URL` | URL dasar kartu (mis. `https://reviewku-qr.vercel.app`) |
 | `ADMIN_EMAILS` | Email admin dipisah koma (allowlist login) |
+| `RATE_LIMIT_DISABLED` | `true` = matikan rate limit **hanya saat lokal**. Di production selalu aktif apa pun nilainya. |
 
 ### 3. Supabase Auth (login admin `/admin`)
 
@@ -72,9 +73,15 @@ npm run build       # production build
 npm run test:e2e    # Playwright (butuh Supabase + SQL sudah dijalankan)
 ```
 
+> **Catatan e2e:** Next.js 16 hanya mengizinkan satu `next dev` per project.
+> Stop dulu `npm run dev` (Ctrl+C) sebelum `npm run test:e2e` — test otomatis
+> memakai port 3100 dengan rate limit **aktif** (test lockout butuh), lalu
+> jalankan `npm run dev` lagi sesudahnya.
+
 ## Keamanan
 
 - Kolom `pin` disimpan sebagai `pin_hash` (HMAC-SHA256 + pepper di env).
 - RLS aktif + `revoke` penuh untuk `anon`/`authenticated` — semua akses lewat secret key di server.
 - Rate limit 3 lapis: per-IP (tabel `rate_limits`), backoff bertingkat, soft-lock kartu.
+  Lokal bisa dimatikan dengan `RATE_LIMIT_DISABLED=true` di `.env.local`; production tetap aktif.
 - `review_url` wajib host Google (allowlist) — cegah open redirect.

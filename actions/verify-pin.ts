@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { setEditCookie } from "@/lib/edit-token";
 import { getCard } from "@/lib/cards";
 import { verifyPin } from "@/lib/pin";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, rateLimitsEnabled } from "@/lib/rate-limit";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export interface PinState {
@@ -35,12 +35,16 @@ export async function verifyCardPin(
       h.get("x-real-ip") ||
       "local";
 
-    const rl = await rateLimit(`pin-verify:${ip}:${cardId}`, 5, 60);
-    if (!rl.allowed) {
-      return {
-        ok: false,
-        error: `Terlalu banyak percobaan. Tunggu ${rl.retryAfter} detik lagi.`,
-      };
+    const easyMode = !rateLimitsEnabled();
+
+    if (!easyMode) {
+      const rl = await rateLimit(`pin-verify:${ip}:${cardId}`, 5, 60);
+      if (!rl.allowed) {
+        return {
+          ok: false,
+          error: `Terlalu banyak percobaan. Tunggu ${rl.retryAfter} detik lagi.`,
+        };
+      }
     }
 
     const card = await getCard(cardId);
@@ -52,6 +56,7 @@ export async function verifyCardPin(
     }
 
     if (
+      !easyMode &&
       card.pin_locked_until &&
       new Date(card.pin_locked_until).getTime() > Date.now()
     ) {
@@ -65,6 +70,9 @@ export async function verifyCardPin(
     }
 
     if (!verifyPin(pin, card.pin_hash)) {
+      if (easyMode) {
+        return { ok: false, error: "PIN salah." };
+      }
       const attempts = card.pin_attempts + 1;
       let lockSeconds = 0;
       if (attempts % 5 === 0) {
