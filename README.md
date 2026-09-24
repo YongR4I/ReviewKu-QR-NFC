@@ -37,15 +37,15 @@ npm run dev                  # http://localhost:3000
 | `PIN_PEPPER` | HMAC PIN (random 32 byte hex) |
 | `EDIT_TOKEN_SECRET` | HMAC cookie edit (random 32 byte hex) |
 | `NEXT_PUBLIC_SITE_URL` | URL dasar kartu (mis. `https://reviewku-qr.vercel.app`) |
-| `ADMIN_EMAILS` | Email admin dipisah koma (allowlist login) |
+| `ADMIN_USERNAME` | Username login `/admin` (default contoh: `admin`) |
+| `ADMIN_PASSWORD` | Password login `/admin` (default contoh: `admin123`) |
 | `RATE_LIMIT_DISABLED` | `true` = matikan rate limit **hanya saat lokal**. Di production selalu aktif apa pun nilainya. |
 
-### 3. Supabase Auth (login admin `/admin`)
+### 3. Login admin (`/admin`)
 
-Dashboard → **Authentication → URL Configuration**:
-
-- **Site URL**: `https://[domain-kamu]/admin`
-- **Redirect URLs**: tambahkan `https://[domain-kamu]/**` dan `http://localhost:3000/**`
+Login memakai **username + password** dari env (`ADMIN_USERNAME` /
+`ADMIN_PASSWORD`) — session disimpan sebagai cookie HMAC 7 hari, tanpa
+email/magic link. Ganti password di `.env.local` sebelum deploy.
 
 ## Deploy (Vercel)
 
@@ -60,7 +60,7 @@ Dashboard → **Authentication → URL Configuration**:
 |---|---|
 | `/c/[ID]` | Inactive → form aktivasi · Active → 307 ke Google Review |
 | `/c/[ID]/edit` | Gate PIN 4 digit → edit nama/link |
-| `/admin` | Login magic link → bulk generate ID + QR ZIP/CSV + reset kartu |
+| `/admin` | Login username+password → bulk generate ID + QR ZIP/CSV + reset kartu |
 | `/api/health` | Pinging keep-alive (query DB) |
 
 ## Perintah

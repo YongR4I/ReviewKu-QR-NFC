@@ -1,10 +1,16 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/admin-auth";
+import {
+  clearAdminCookie,
+  requireAdmin,
+  setAdminCookie,
+  verifyAdminCredentials,
+} from "@/lib/admin-auth";
 import { hashPin } from "@/lib/pin";
+import { rateLimit } from "@/lib/rate-limit";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { supabaseServer } from "@/lib/supabase/server";
 
 const CARD_ID_RE = /^[A-Za-z0-9_-]{1,50}$/;
 const PREFIX_RE = /^[A-Za-z0-9_-]{1,30}$/;
@@ -15,6 +21,11 @@ export interface GenerateResult {
   ids?: string[];
   created?: number;
   skipped?: number;
+}
+
+export interface LoginState {
+  ok: boolean;
+  error?: string;
 }
 
 export interface SearchState {
@@ -203,8 +214,43 @@ export async function adminResetCard(
   }
 }
 
+export async function adminLogin(
+  _prev: LoginState,
+  formData: FormData
+): Promise<LoginState> {
+  try {
+    const username = String(formData.get("username") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    if (!username || !password) {
+      return { ok: false, error: "Isi username dan password." };
+    }
+
+    const h = await headers();
+    const ip =
+      h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      h.get("x-real-ip") ||
+      "local";
+    const rl = await rateLimit(`admin-login:${ip}`, 10, 300);
+    if (!rl.allowed) {
+      return {
+        ok: false,
+        error: `Terlalu banyak percobaan. Tunggu ${rl.retryAfter} detik lagi.`,
+      };
+    }
+
+    if (!verifyAdminCredentials(username, password)) {
+      return { ok: false, error: "Username atau password salah." };
+    }
+
+    await setAdminCookie();
+    return { ok: true };
+  } catch (err) {
+    console.error("adminLogin exception:", err);
+    return { ok: false, error: "Terjadi kesalahan. Silakan coba lagi." };
+  }
+}
+
 export async function signOut(): Promise<void> {
-  const client = await supabaseServer();
-  await client.auth.signOut();
+  await clearAdminCookie();
   revalidatePath("/admin", "layout");
 }

@@ -25,10 +25,10 @@ export const env = {
   get siteUrl(): string {
     return required("NEXT_PUBLIC_SITE_URL");
   },
-  get adminEmails(): string[] {
-    return (process.env.ADMIN_EMAILS ?? "")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean);
+  get adminUsername(): string {
+    return required("ADMIN_USERNAME");
+  },
+  get adminPassword(): string {
+    return required("ADMIN_PASSWORD");
   },
 };

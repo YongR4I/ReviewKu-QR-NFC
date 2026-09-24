@@ -70,11 +70,31 @@ test("edit: PIN benar → form → simpan perubahan", async ({ page }) => {
 test("admin: belum login → form Login Admin + noindex", async ({ page }) => {
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Login Admin" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Kirim Link Login" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Masuk" })).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     /noindex/
   );
+});
+
+test("admin: password salah ditolak", async ({ page }) => {
+  await page.goto("/admin");
+  await page.getByLabel("Username").fill("admin");
+  await page.getByLabel("Password").fill("salah-salah");
+  await page.getByRole("button", { name: "Masuk" }).click();
+  await expect(page.getByText("Username atau password salah")).toBeVisible();
+});
+
+test("admin: login admin/admin123 → dashboard tampil", async ({ page }) => {
+  await page.goto("/admin");
+  await page.getByLabel("Username").fill("admin");
+  await page.getByLabel("Password").fill("admin123");
+  await page.getByRole("button", { name: "Masuk" }).click();
+  await expect(
+    page.getByRole("heading", { name: "ReviewKU QR · Admin" })
+  ).toBeVisible();
+  await expect(page.getByText("Total Kartu")).toBeVisible();
+  await expect(page.getByText("Masuk sebagai admin")).toBeVisible();
 });
 
 test("edit: 5x PIN salah → kartu terkunci 60 detik", async ({ page }) => {

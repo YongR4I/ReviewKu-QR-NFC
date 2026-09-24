@@ -5,8 +5,8 @@ import { GeneratePanel } from "@/components/admin/GeneratePanel";
 import { ResetPanel } from "@/components/admin/ResetPanel";
 
 export default async function AdminPage() {
-  const { user, isAllowed } = await getAdminSession();
-  if (!user || !isAllowed) return null;
+  const { username } = await getAdminSession();
+  if (!username) return null;
 
   const db = supabaseAdmin();
   const [totalRes, activeRes, scansRes] = await Promise.all([
@@ -30,7 +30,7 @@ export default async function AdminPage() {
             ReviewKU QR · Admin
           </h1>
           <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
-            Masuk sebagai <span className="font-medium">{user.email}</span>
+            Masuk sebagai <span className="font-medium">{username}</span>
           </p>
         </div>
         <form action={signOut}>
