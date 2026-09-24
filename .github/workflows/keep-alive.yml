@@ -1,0 +1,25 @@
+name: Keep-alive
+
+# Mencegah Supabase Free di-pause (7 hari tanpa aktivitas).
+# Setel repo variable SITE_URL (contoh: https://reviewku-qr.vercel.app)
+
+on:
+  schedule:
+    - cron: "0 10 * * *"
+    - cron: "0 22 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/health (menjalankan query ke Supabase)
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "Repo variable SITE_URL belum diisi — skip."
+            exit 0
+          fi
+          echo "Pinging $SITE_URL/api/health"
+          curl -fsS --max-time 30 "$SITE_URL/api/health"

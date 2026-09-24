@@ -1,0 +1,36 @@
+name: Daily backup
+
+# Backup harian tabel cards ke artifact GitHub Actions (retention 90 hari).
+# Setel repo secrets: SUPABASE_URL dan SUPABASE_SECRET_KEY.
+
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump cards (JSON)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SECRET_KEY" ]; then
+            echo "Secrets SUPABASE_URL / SUPABASE_SECRET_KEY belum diisi — skip dump."
+            echo "[]" > cards-backup.json
+          else
+            curl -fsS --max-time 60 \
+              "$SUPABASE_URL/rest/v1/cards?select=*&limit=10000" \
+              -H "apikey: $SUPABASE_SECRET_KEY" \
+              -H "Authorization: Bearer $SUPABASE_SECRET_KEY" \
+              -o cards-backup.json
+            echo "Backup OK — $(wc -c < cards-backup.json) bytes"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cards-backup-${{ github.run_id }}
+          path: cards-backup.json
+          retention-days: 90
