@@ -48,7 +48,7 @@ async function fetchCardStatus(cardId: string, isBot: boolean): Promise<ScanRow 
   return rows[0] ?? null;
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const parts = req.nextUrl.pathname.split("/");
 
   // /c/<id>/edit → biarkan page edit yang memproses

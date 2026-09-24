@@ -7,7 +7,7 @@ redirect (307) ke link Google Review bisnis tersebut.
 
 ## Stack
 
-- Next.js 16 (App Router, Server Actions, Middleware)
+- Next.js 16 (App Router, Server Actions, Proxy)
 - Supabase (PostgreSQL) — akses server-only via secret key
 - Tailwind CSS 4
 - Deploy: Vercel · Repo: GitHub Actions (keep-alive + backup)
