@@ -1,19 +1,8 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-
-function parseEnvFile(path: string): Record<string, string> {
-  const out: Record<string, string> = {};
-  const raw = readFileSync(path, "utf8");
-  for (const line of raw.split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m) out[m[1]] = m[2];
-  }
-  return out;
-}
+import { localEnv } from "./helpers";
 
 export default async function globalSetup() {
-  const env = parseEnvFile(resolve(process.cwd(), ".env.local"));
+  const env = localEnv();
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const key = env.SUPABASE_SECRET_KEY;
   if (!url || !key) {

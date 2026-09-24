@@ -1,8 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { localEnv } from "../helpers";
 
 const CARD = "CARD-E2E-01";
 const REVIEW_URL =
   "https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4";
+const ADMIN_USER = localEnv().ADMIN_USERNAME ?? "admin";
+const ADMIN_PASS = localEnv().ADMIN_PASSWORD ?? "";
 
 test.describe.configure({ mode: "serial" });
 
@@ -79,16 +82,16 @@ test("admin: belum login → form Login Admin + noindex", async ({ page }) => {
 
 test("admin: password salah ditolak", async ({ page }) => {
   await page.goto("/admin");
-  await page.getByLabel("Username").fill("admin");
+  await page.getByLabel("Username").fill(ADMIN_USER);
   await page.getByLabel("Password").fill("salah-salah");
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page.getByText("Username atau password salah")).toBeVisible();
 });
 
-test("admin: login admin/admin123 → dashboard tampil", async ({ page }) => {
+test("admin: login → dashboard tampil", async ({ page }) => {
   await page.goto("/admin");
-  await page.getByLabel("Username").fill("admin");
-  await page.getByLabel("Password").fill("admin123");
+  await page.getByLabel("Username").fill(ADMIN_USER);
+  await page.getByLabel("Password").fill(ADMIN_PASS);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(
     page.getByRole("heading", { name: "ReviewKU QR · Admin" })
@@ -100,8 +103,8 @@ test("admin: login admin/admin123 → dashboard tampil", async ({ page }) => {
 
 test("admin: hapus kartu permanen dari daftar", async ({ page }) => {
   await page.goto("/admin");
-  await page.getByLabel("Username").fill("admin");
-  await page.getByLabel("Password").fill("admin123");
+  await page.getByLabel("Username").fill(ADMIN_USER);
+  await page.getByLabel("Password").fill(ADMIN_PASS);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page.getByRole("heading", { name: "Daftar Kartu" })).toBeVisible();
 
