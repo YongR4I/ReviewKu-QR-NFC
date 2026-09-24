@@ -93,8 +93,26 @@ test("admin: login admin/admin123 → dashboard tampil", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "ReviewKU QR · Admin" })
   ).toBeVisible();
-  await expect(page.getByText("Total Kartu")).toBeVisible();
   await expect(page.getByText("Masuk sebagai admin")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Daftar Kartu" })).toBeVisible();
+  await expect(page.getByText("CARD-E2E-01")).toBeVisible();
+});
+
+test("admin: hapus kartu permanen dari daftar", async ({ page }) => {
+  await page.goto("/admin");
+  await page.getByLabel("Username").fill("admin");
+  await page.getByLabel("Password").fill("admin123");
+  await page.getByRole("button", { name: "Masuk" }).click();
+  await expect(page.getByRole("heading", { name: "Daftar Kartu" })).toBeVisible();
+
+  await page.once("dialog", (d) => d.accept());
+  await page
+    .getByRole("row", { name: /CARD-E2E-01/ })
+    .getByRole("button", { name: "Hapus" })
+    .click();
+
+  await expect(page.getByText("dihapus permanen")).toBeVisible();
+  await expect(page.getByRole("row", { name: /CARD-E2E-01/ })).toHaveCount(0);
 });
 
 test("edit: 5x PIN salah → kartu terkunci 60 detik", async ({ page }) => {

@@ -60,7 +60,7 @@ email/magic link. Ganti password di `.env.local` sebelum deploy.
 |---|---|
 | `/c/[ID]` | Inactive → form aktivasi · Active → 307 ke Google Review |
 | `/c/[ID]/edit` | Gate PIN 4 digit → edit nama/link |
-| `/admin` | Login username+password → bulk generate ID + QR ZIP/CSV + reset kartu |
+| `/admin` | Login username+password → bulk generate ID + QR ZIP/CSV + daftar kartu + reset/hapus kartu |
 | `/api/health` | Pinging keep-alive (query DB) |
 
 ## Perintah

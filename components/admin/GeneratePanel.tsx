@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import JSZip from "jszip";
 import { generateCards, type GenerateResult } from "@/actions/admin";
@@ -31,6 +32,16 @@ export function GeneratePanel({ siteUrl }: { siteUrl: string }) {
   );
   const [zipBusy, setZipBusy] = useState(false);
   const [zipProgress, setZipProgress] = useState(0);
+  const router = useRouter();
+  const skipInitial = useRef(true);
+
+  useEffect(() => {
+    if (skipInitial.current) {
+      skipInitial.current = false;
+      return;
+    }
+    router.refresh();
+  }, [state, router]);
 
   const ids = state.ids ?? [];
 

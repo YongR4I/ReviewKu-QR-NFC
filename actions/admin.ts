@@ -250,6 +250,38 @@ export async function adminLogin(
   }
 }
 
+export async function adminDeleteCard(
+  _prev: SimpleResult,
+  formData: FormData
+): Promise<SimpleResult> {
+  try {
+    await requireAdmin();
+    const cardId = String(formData.get("cardId") ?? "").trim().toUpperCase();
+    if (!CARD_ID_RE.test(cardId)) {
+      return { ok: false, error: "ID kartu tidak valid." };
+    }
+
+    const { data, error } = await supabaseAdmin()
+      .from("cards")
+      .delete()
+      .eq("id", cardId)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      console.error("adminDeleteCard error:", error.message);
+      return { ok: false, error: "Gagal menghapus kartu." };
+    }
+    if (!data) {
+      return { ok: false, error: `Kartu ${cardId} tidak ditemukan.` };
+    }
+    return { ok: true, message: `Kartu ${cardId} dihapus permanen.` };
+  } catch (err) {
+    console.error("adminDeleteCard exception:", err);
+    return { ok: false, error: "Gagal — kamu tidak berwenang atau server error." };
+  }
+}
+
 export async function signOut(): Promise<void> {
   await clearAdminCookie();
   revalidatePath("/admin", "layout");

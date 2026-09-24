@@ -1,18 +1,21 @@
 import { signOut } from "@/actions/admin";
 import { getAdminSession } from "@/lib/admin-auth";
+import { getAdminCardList } from "@/lib/cards";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { GeneratePanel } from "@/components/admin/GeneratePanel";
 import { ResetPanel } from "@/components/admin/ResetPanel";
+import { CardListPanel } from "@/components/admin/CardListPanel";
 
 export default async function AdminPage() {
   const { username } = await getAdminSession();
   if (!username) return null;
 
   const db = supabaseAdmin();
-  const [totalRes, activeRes, scansRes] = await Promise.all([
+  const [totalRes, activeRes, scansRes, cardRows] = await Promise.all([
     db.from("cards").select("id", { count: "exact", head: true }),
     db.from("cards").select("id", { count: "exact", head: true }).eq("is_active", true),
     db.from("cards").select("scan_count").limit(10000),
+    getAdminCardList(),
   ]);
 
   const total = totalRes.count ?? 0;
@@ -51,6 +54,7 @@ export default async function AdminPage() {
 
       <div className="flex flex-col gap-6">
         <GeneratePanel siteUrl={siteUrl} />
+        <CardListPanel cards={cardRows} total={total} />
         <ResetPanel />
       </div>
     </main>

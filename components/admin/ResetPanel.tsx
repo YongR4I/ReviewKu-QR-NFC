@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
+  adminDeleteCard,
   adminResetCard,
   adminSetPin,
   searchCard,
@@ -12,6 +14,7 @@ import {
 const searchInitial: SearchState = { ok: false };
 const pinInitial: SimpleResult = { ok: false };
 const resetInitial: SimpleResult = { ok: false };
+const deleteInitial: SimpleResult = { ok: false };
 
 export function ResetPanel() {
   const [searchState, searchAction, searchPending] = useActionState(
@@ -26,8 +29,22 @@ export function ResetPanel() {
     adminResetCard,
     resetInitial
   );
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    adminDeleteCard,
+    deleteInitial
+  );
 
   const [pin, setPin] = useState("");
+  const router = useRouter();
+  const skipInitial = useRef(true);
+
+  useEffect(() => {
+    if (skipInitial.current) {
+      skipInitial.current = false;
+      return;
+    }
+    router.refresh();
+  }, [pinState, resetState, deleteState, router]);
 
   const card = searchState.ok ? searchState.card : undefined;
 
@@ -180,6 +197,42 @@ export function ResetPanel() {
             {resetState.error && (
               <p className="mt-2 text-xs text-red-600 dark:text-red-400">
                 {resetState.error}
+              </p>
+            )}
+          </form>
+
+          <form
+            action={deleteAction}
+            className="mt-3 border-t border-zinc-200 pt-4 dark:border-zinc-800"
+            onSubmit={(e) => {
+              if (
+                !confirm(
+                  `Hapus permanen ${card.id}? Kartu, data bisnis, dan PIN-nya dihapus selamanya — tidak bisa dibatalkan.`
+                )
+              ) {
+                e.preventDefault();
+              }
+            }}
+          >
+            <input type="hidden" name="cardId" value={card.id} />
+            <button
+              type="submit"
+              disabled={deletePending}
+              className="h-9 rounded-lg bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600"
+            >
+              {deletePending ? "Menghapus…" : "Hapus Permanen"}
+            </button>
+            <p className="mt-1.5 text-xs text-zinc-400">
+              Berbeda dari “Kembalikan ke Blank”: ID ikut hilang dari database.
+            </p>
+            {deleteState.message && (
+              <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400">
+                {deleteState.message}
+              </p>
+            )}
+            {deleteState.error && (
+              <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+                {deleteState.error}
               </p>
             )}
           </form>
