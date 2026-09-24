@@ -37,6 +37,15 @@ export default async function globalSetup() {
           pin_attempts: 0,
           pin_locked_until: null,
         },
+        {
+          id: "CARD-E2E-02",
+          is_active: false,
+          business_name: null,
+          review_url: null,
+          pin_hash: null,
+          pin_attempts: 0,
+          pin_locked_until: null,
+        },
       ],
       { onConflict: "id" }
     );

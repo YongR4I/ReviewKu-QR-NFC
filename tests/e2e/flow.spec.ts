@@ -66,3 +66,46 @@ test("edit: PIN benar → form → simpan perubahan", async ({ page }) => {
 
   await expect(page.getByText("Data kartu berhasil diperbarui")).toBeVisible();
 });
+
+test("admin: belum login → form Login Admin + noindex", async ({ page }) => {
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "Login Admin" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Kirim Link Login" })).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/
+  );
+});
+
+test("edit: 5x PIN salah → kartu terkunci 60 detik", async ({ page }) => {
+  const card = "CARD-E2E-02";
+
+  await page.goto(`/c/${card}`);
+  await expect(page.getByRole("heading", { name: "Aktivasi Kartu" })).toBeVisible();
+  await page.getByLabel("Nama Bisnis").fill("Warung Lockout");
+  await page.getByLabel("Link Google Review").fill(REVIEW_URL);
+  await page.getByLabel("PIN 4 Digit").fill("5678");
+  await page.getByRole("button", { name: "Aktivasi Kartu" }).click();
+  await expect(page.getByText("Kartu Berhasil Diaktivasi")).toBeVisible();
+
+  await page.goto(`/c/${card}/edit`);
+  await expect(page.getByRole("heading", { name: "Edit Data Kartu" })).toBeVisible();
+
+  const submitWrongPin = async () => {
+    await page.getByLabel("PIN").fill("1111");
+    await Promise.all([
+      page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().includes(`/c/${card}/edit`)
+      ),
+      page.getByRole("button", { name: "Buka Pengaturan" }).click(),
+    ]);
+  };
+
+  for (let i = 0; i < 4; i++) {
+    await submitWrongPin();
+    await expect(page.getByText("PIN salah.")).toBeVisible();
+  }
+
+  await submitWrongPin();
+  await expect(page.getByText(/terkunci \d+ detik/)).toBeVisible();
+});
