@@ -54,7 +54,7 @@ export default async function AdminPage() {
 
       <div className="flex flex-col gap-6">
         <GeneratePanel siteUrl={siteUrl} />
-        <CardListPanel cards={cardRows} total={total} />
+        <CardListPanel cards={cardRows} total={total} siteUrl={siteUrl} />
         <ResetPanel />
       </div>
     </main>

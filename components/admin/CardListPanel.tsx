@@ -3,6 +3,8 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import QRCode from "qrcode";
 import { adminDeleteCard, type SimpleResult } from "@/actions/admin";
 
 export interface CardListRow {
@@ -29,9 +31,11 @@ const deleteInitial: SimpleResult = { ok: false };
 export function CardListPanel({
   cards,
   total,
+  siteUrl,
 }: {
   cards: CardListRow[];
   total: number;
+  siteUrl: string;
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -39,6 +43,10 @@ export function CardListPanel({
     adminDeleteCard,
     deleteInitial
   );
+  const [qr, setQr] = useState<{ id: string; url: string; dataUrl: string } | null>(
+    null
+  );
+  const [qrBusy, setQrBusy] = useState(false);
   const router = useRouter();
   const skipInitial = useRef(true);
 
@@ -49,6 +57,46 @@ export function CardListPanel({
     }
     router.refresh();
   }, [deleteState, router]);
+
+  useEffect(() => {
+    if (!qr) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setQr(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [qr]);
+
+  async function openQr(id: string) {
+    const url = `${siteUrl || window.location.origin}/c/${id}`;
+    setQr({ id, url, dataUrl: "" });
+    setQrBusy(true);
+    try {
+      const dataUrl = await QRCode.toDataURL(url, {
+        errorCorrectionLevel: "H",
+        width: 1024,
+        margin: 4,
+        color: { dark: "#000000", light: "#FFFFFF" },
+      });
+      setQr({ id, url, dataUrl });
+    } catch (err) {
+      console.error("QR generation failed:", err);
+      alert("Gagal membuat QR. Coba lagi.");
+      setQr(null);
+    } finally {
+      setQrBusy(false);
+    }
+  }
+
+  function downloadQr() {
+    if (!qr?.dataUrl) return;
+    const a = document.createElement("a");
+    a.href = qr.dataUrl;
+    a.download = `qr-${qr.id}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -187,6 +235,13 @@ export function CardListPanel({
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openQr(c.id)}
+                          className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                        >
+                          QR
+                        </button>
                         <Link
                           href={`/c/${c.id}`}
                           target="_blank"
@@ -229,6 +284,67 @@ export function CardListPanel({
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {qr && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6"
+          onClick={() => setQr(null)}
+          role="presentation"
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                QR{" "}
+                <code className="font-mono text-sm text-zinc-600 dark:text-zinc-400">
+                  {qr.id}
+                </code>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setQr(null)}
+                className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Tutup
+              </button>
+            </div>
+
+            <div className="mt-4">
+              {qr.dataUrl ? (
+                <Image
+                  src={qr.dataUrl}
+                  alt={`QR ${qr.id}`}
+                  width={1024}
+                  height={1024}
+                  unoptimized
+                  className="mx-auto w-full max-w-[18rem] rounded-lg border border-zinc-200 dark:border-zinc-800"
+                />
+              ) : (
+                <p className="py-14 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                  {qrBusy ? "Membuat QR…" : "QR tidak tersedia."}
+                </p>
+              )}
+            </div>
+
+            <p className="mt-3 break-all text-center text-xs text-zinc-500 dark:text-zinc-400">
+              {qr.url}
+            </p>
+
+            <button
+              type="button"
+              onClick={downloadQr}
+              disabled={!qr.dataUrl}
+              className="mt-4 h-10 w-full rounded-lg bg-zinc-900 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              Download PNG
+            </button>
+          </div>
         </div>
       )}
     </section>
