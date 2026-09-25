@@ -36,7 +36,7 @@ npm run dev                  # http://localhost:3000
 | `SUPABASE_SECRET_KEY` | **RAHASIA** — hanya server |
 | `PIN_PEPPER` | HMAC PIN (random 32 byte hex) |
 | `EDIT_TOKEN_SECRET` | HMAC cookie edit (random 32 byte hex) |
-| `NEXT_PUBLIC_SITE_URL` | URL dasar kartu (mis. `https://reviewku-qr.vercel.app`) |
+| `NEXT_PUBLIC_SITE_URL` | URL dasar kartu (mis. `https://review-ku-qr.vercel.app`) |
 | `ADMIN_USERNAME` | Username login `/admin` (default contoh: `admin`) |
 | `ADMIN_PASSWORD` | Password login `/admin` (default contoh: `admin123`) |
 | `RATE_LIMIT_DISABLED` | `true` = matikan rate limit **hanya saat lokal**. Di production selalu aktif apa pun nilainya. |

@@ -1,7 +1,7 @@
 name: Keep-alive
 
 # Mencegah Supabase Free di-pause (7 hari tanpa aktivitas).
-# Setel repo variable SITE_URL (contoh: https://reviewku-qr.vercel.app)
+# Setel repo variable SITE_URL (contoh: https://review-ku-qr.vercel.app)
 
 on:
   schedule:
