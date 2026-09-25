@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { validateReviewUrl } from "@/lib/google-url";
 import { hashPin } from "@/lib/pin";
+import { resolveToReviewUrl } from "@/lib/review-link";
 import { rateLimit } from "@/lib/rate-limit";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -52,12 +53,14 @@ export async function activateCard(
       };
     }
 
+    const reviewUrl = await resolveToReviewUrl(urlCheck.url);
+
     const { data, error } = await supabaseAdmin()
       .from("cards")
       .update({
         is_active: true,
         business_name: businessName,
-        review_url: urlCheck.url,
+        review_url: reviewUrl,
         pin_hash: hashPin(pin),
         pin_attempts: 0,
         pin_locked_until: null,
@@ -81,7 +84,7 @@ export async function activateCard(
 
     return {
       ok: true,
-      reviewUrl: urlCheck.url,
+      reviewUrl,
       businessName,
     };
   } catch (err) {

@@ -41,7 +41,10 @@ export function ActivationForm({ cardId }: { cardId: string }) {
             Edit Data Kartu
           </Link>
         </div>
-        <p className="mt-5 text-center text-xs text-zinc-400">
+        <p className="mt-5 break-all text-center text-xs text-zinc-400">
+          {state.reviewUrl}
+        </p>
+        <p className="mt-3 text-center text-xs text-zinc-400">
           Scan kartu lagi untuk mengarahkan pelanggan ke Google Review.
         </p>
       </div>
@@ -102,7 +105,8 @@ export function ActivationForm({ cardId }: { cardId: string }) {
             className="h-11 rounded-lg border border-zinc-300 bg-white px-3.5 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-100"
           />
           <span className="text-xs text-zinc-400">
-            Buka Google Maps → profilmu → “Ulasan” → “Bagikan ulasan”.
+            Bisa tempel link Maps apa saja (“Bagikan” / place / g.page) — otomatis
+            diubah jadi link tulis ulasan.
           </span>
         </label>
 

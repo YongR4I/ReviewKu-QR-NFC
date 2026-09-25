@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { validateReviewUrl } from "@/lib/google-url";
 import { getEditToken, verifyEditToken } from "@/lib/edit-token";
 import { rateLimit } from "@/lib/rate-limit";
+import { resolveToReviewUrl } from "@/lib/review-link";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export interface UpdateState {
@@ -52,9 +53,11 @@ export async function updateCard(
       };
     }
 
+    const reviewUrl = await resolveToReviewUrl(urlCheck.url);
+
     const { data, error } = await supabaseAdmin()
       .from("cards")
-      .update({ business_name: businessName, review_url: urlCheck.url })
+      .update({ business_name: businessName, review_url: reviewUrl })
       .eq("id", cardId)
       .eq("is_active", true)
       .select("id")

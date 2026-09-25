@@ -70,6 +70,31 @@ test("edit: PIN benar → form → simpan perubahan", async ({ page }) => {
   await expect(page.getByText("Data kartu berhasil diperbarui")).toBeVisible();
 });
 
+const CONVERTED_URL = `${REVIEW_URL.split("?")[0]}?placeid=ChIJ7cU2YabFaS4R2Xkxnko24EI`;
+
+test("aktivasi dengan link Maps → otomatis jadi link tulis ulasan", async ({
+  page,
+  request,
+}) => {
+  const mapsUrl =
+    "https://www.google.com/maps/place/Anami+Coffee/@1.23,4.56,17z/data=!4m8!3m7!1s0x2e69c5a66136c5ed:0x42e0364a9e3179d9!8m2!3d1.23!4d4.56";
+
+  await page.goto("/c/CARD-E2E-03");
+  await expect(page.getByRole("heading", { name: "Aktivasi Kartu" })).toBeVisible();
+
+  await page.getByLabel("Nama Bisnis").fill("Kopi Konversi");
+  await page.getByLabel("Link Google Review").fill(mapsUrl);
+  await page.getByLabel("PIN 4 Digit").fill("4321");
+  await page.getByRole("button", { name: "Aktivasi Kartu" }).click();
+
+  await expect(page.getByText("Kartu Berhasil Diaktivasi")).toBeVisible();
+  await expect(page.getByText(CONVERTED_URL)).toBeVisible();
+
+  const resp = await request.get("/c/CARD-E2E-03", { maxRedirects: 0 });
+  expect(resp.status()).toBe(307);
+  expect(resp.headers()["location"] ?? "").toBe(CONVERTED_URL);
+});
+
 test("admin: belum login → form Login Admin + noindex", async ({ page }) => {
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Login Admin" })).toBeVisible();
@@ -108,14 +133,15 @@ test("admin: hapus kartu permanen dari daftar", async ({ page }) => {
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page.getByRole("heading", { name: "Daftar Kartu" })).toBeVisible();
 
-  await page.once("dialog", (d) => d.accept());
-  await page
-    .getByRole("row", { name: /CARD-E2E-01/ })
-    .getByRole("button", { name: "Hapus" })
-    .click();
-
-  await expect(page.getByText("dihapus permanen")).toBeVisible();
-  await expect(page.getByRole("row", { name: /CARD-E2E-01/ })).toHaveCount(0);
+  await page.on("dialog", (d) => d.accept());
+  for (const card of ["CARD-E2E-01", "CARD-E2E-03"]) {
+    await page
+      .getByRole("row", { name: new RegExp(card) })
+      .getByRole("button", { name: "Hapus" })
+      .click();
+    await expect(page.getByText("dihapus permanen")).toBeVisible();
+    await expect(page.getByRole("row", { name: new RegExp(card) })).toHaveCount(0);
+  }
 });
 
 test("edit: 5x PIN salah → kartu terkunci 60 detik", async ({ page }) => {
